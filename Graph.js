@@ -1,18 +1,31 @@
 const util=require('util');
-
 class Graph {
     constructor(){
         this.edges=[];
         this.nodes=[];
     }
 
-    addNode(nodeName,marked=false){
-        for(let i=0;i<this.nodes.length;i++){
-            if(this.nodes[i].nodeName===nodeName) return;
+    addNode(nodeArr,marked=false){
+        for(let i=0;i<nodeArr.length;i++){
+            if(this.nodes.length===0){
+                this.nodes.push({nodeName:nodeArr[i],marked});
+                this.edges[nodeArr[i]]=[];
+            } 
+            for(let j=0,len=this.nodes.length;j<len;j++){
+                if(this.nodes[j].nodeName===nodeArr[i]) break;
+                if(j===len-1){
+                    this.nodes.push({nodeName:nodeArr[i],marked});
+                    this.edges[nodeArr[i]]=[];
+                } 
+            }
         }
-        this.nodes.push({nodeName,marked});
-        this.edges[nodeName]=[];
     }
+
+    initializeNode(){
+        this.nodes.map(node=>{
+            node.marked=false
+        });
+    };
 
     addEdge(node1,node2){
         const alreadyExist=this.edges[node1].includes(node2)
@@ -27,10 +40,10 @@ class Graph {
         this.edges[node1].push(node2);
     }
 
-    DFS(startNode){
+    DFS(startNode=this.nodes[0].nodeName){
+        this.initializeNode();
+        process.stdout.write("START -> ");
         const root=this.getNode(startNode);
-        console.log(`Start Node : ${root.nodeName}`);
-
         const stack=[];
         stack.push(root);
         root.marked=true;
@@ -45,18 +58,41 @@ class Graph {
                     stack.push(edgeNode);
                 }
             })
-            console.log(`${node.nodeName} -> `);  
+            process.stdout.write(" "+node.nodeName+" ->");  
         }
+        process.stdout.write(" END\n");
+
+    }
+    BFS(startNode=this.nodes[0].nodeName){
+        this.initializeNode();
+        process.stdout.write("START -> ");
+        const root=this.getNode(startNode);
+        const queue=[];
+        queue.push(root);
+        root.marked=true;
+
+        while(queue.length!==0){
+            const node=queue.shift();
+            const edges=this.getEdges(node.nodeName);
+            edges.map(edge=>{
+                const edgeNode=this.getNode(edge);
+                if(edgeNode.marked===false){
+                    edgeNode.marked=true;
+                    queue.push(edgeNode);
+                }
+            })
+            process.stdout.write(" "+node.nodeName+" ->");
+        }
+        process.stdout.write(" END\n");
     }
 
     printNodes(){
         console.log(`\n Nodes : \n ${util.inspect(this.nodes,{showHidden:false,depth:null})} \n`);
     }
-
     printEdges(){
         console.log(`\n Edges : \n ${util.inspect(this.edges,{showHidden:false,depth:null})} \n`);
     }
- 
+
     getNode(nodeName){
         const node=this.nodes.find(node=>{
             return node.nodeName===nodeName
@@ -70,21 +106,6 @@ class Graph {
     }
 }
 
-const g=new Graph();
+module.exports=Graph;
 
-g.addNode("node_1")
-g.addNode("node_2")
-g.addNode("node_3")
-g.addNode("node_4")
-g.addNode("node_5")
-
-g.addEdge("node_1","node_3");
-g.addEdge("node_3","node_5");
-g.addEdge("node_5","node_4");
-g.addEdge("node_2","node_4");
-
-g.printNodes();
-g.printEdges();
-
-g.DFS("node_1");
 
